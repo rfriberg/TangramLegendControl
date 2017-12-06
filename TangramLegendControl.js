@@ -2,68 +2,53 @@
  * Tangram Legend Control
  * Adds a legend and layer toggle to Tangram maps
  * 
- * (Current) Requirements:  
- *   - Tangram must be loaded and have a valid scene (with config)
- *   - Must pass layers in as an object:
+ * Two options for defining which layers to show:  
+ *   - Pass layers in as an object:
  *      layers: {
  *        "Layer name": 'layer_name'
  *      }
+ *   - Or add "legend: true" to layers in scene file
  *
  * ToDo:
  *   - Check for color under layer definition (rather than global)
- *   - Check for "legend" tag in scene file instead of requiring layers object
+ *   - Support line and polygon types, as well
  *   
  * *************************/
+
 
 var TangramLegendControl = L.Control.extend({
   options: {
     position: 'bottomleft',
-    scene: null,
+    layers: null,
     legendTitle: null
   },
 
-  initialize: function (layers, options) {
+  initialize: function (options) {
     L.Util.setOptions(this, options);
-
-    if (this.options.scene) {
-      this._scene = this.options.scene;
-    }
-
-    // Set list of layers
-    // TODO: add option to check for legend tag in scene file
-    this._layers = [];
-
-    for (i in layers) {
-      this._layers.push({
-        layer: layers[i],
-        name: i
-      });
-    }
   },
 
   onAdd: function (map) {
-    // If valid scene wasn't passed in as option, check if Tangram is loaded and has valid scene
-    if (!this._scene || typeof this._scene !== 'object') {
-      var tangramLayer = map.getTangramLayer();
+    this._initLayout();
+    this._scene = map.getTangramLayer().scene;
 
-      if (tangramLayer) {
-        this._scene = tangramLayer.scene;
-      }
-      else {
-        // Set _scene once Tangram is available
-        this._map.on('tangramloaded', function(e) {
-          this._scene = e.tangramLayer.scene;
-        }, this);        
-      }
+    // If necessary, wait for scene to finish initializing
+    if (!this._scene.initialized) {
+      var self = this;
+      this._scene.initializing.then(function () {
+        self._update();
+      });
+    }
+    else {
+      // Populate legend with layers
+      this._update();
     }
 
-    var container = this._buildLegend();
-    return container;
+    return this._container;
   },
 
-  _buildLegend: function () {
+  _initLayout: function () {
     var className = 'tangram-legend-control',
-        container = L.DomUtil.create('div', className);
+        container = this._container = L.DomUtil.create('div', className);
 
     L.DomEvent.disableClickPropagation(container);
     if (!L.Browser.touch) {
@@ -81,22 +66,55 @@ var TangramLegendControl = L.Control.extend({
     var form = this._form = L.DomUtil.create('form', className + '-list');
 
     this._legendLayersList = L.DomUtil.create('div', className + '-layers', form);
-    for (var item in this._layers){
-      var legendItem = this._buildLegendItem(this._layers[item]);
-      this._legendLayersList.appendChild(legendItem);
-    }
     container.appendChild(form);
 
     // Add toggleAll links
     var toggleAllDiv = this._buildToggleAllLinks();
     container.appendChild(toggleAllDiv);
 
-    // Add footer?
-
-    return container;
+    // Add footer? 
   },
 
-  /* Takes obj: { name: '', layer: '' } */
+  _update: function () {
+    if (!this._container) { return this; }
+
+    this._layers = this._buildLayerList(this.options.layers);
+
+    // Add legend items
+    for (var item in this._layers){
+      var legendItem = this._buildLegendItem(this._layers[item]);
+      this._legendLayersList.appendChild(legendItem);
+    }
+
+    return this;
+  },
+
+  _buildLayerList: function (layers) {
+    var layerList = [];
+
+    // If layer list passed in, use that
+    if (layers) {
+      for (i in layers) {
+        layerList.push({
+          layer: layers[i],
+          name: i
+        });
+      }      
+    }
+    // Else check for layers with legend tag in scene file
+    else {
+      layerList = this._getEligibleLayers();
+    }
+
+    return layerList;
+  },
+
+  /***
+   * obj: { 
+   *   name: 'Name of layer used for legend',
+   *   layer: 'layer_name'
+   *  } 
+   ***/
   _buildLegendItem: function (obj) {
     var legendItem = L.DomUtil.create('div', 'tangram-legend-item');
     legendItem.id = 'legend-item-' + obj.layer;
@@ -198,6 +216,36 @@ var TangramLegendControl = L.Control.extend({
 
     // toggle layer visibility
     scene.config.layers._venues[layer].visible = visible;
+  },
+
+  _getEligibleLayers: function () {
+    var layersObj = this._scene.config.layers,
+        layersList = Object.keys(layersObj),
+        eligibleLayers = [];
+
+    for (var layer in layersObj) {
+      var lyrObj = layersObj[layer];
+
+      if (lyrObj.legend) {
+        eligibleLayers.push({
+          layer: layer,
+          name: lyrObj.legend_name || layer
+        });
+      }
+      // Iterate through layers to find possible sublayer (only looks 1 level deep)
+      for (var sublayer in lyrObj) {
+        var subObj = lyrObj[sublayer];
+
+        if (subObj.legend) {
+          eligibleLayers.push({
+            layer: sublayer,
+            name: subObj.legend_name || sublayer
+          });
+        }
+      }
+    }
+
+    return eligibleLayers;
   },
 
   // Used for testing only

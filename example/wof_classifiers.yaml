@@ -180,6 +180,8 @@ layers:
         data: {source: venues}
         food:
             # enabled: false
+            legend: true
+            legend_name: Food & Drink
             filter: global.food.filter
             draw:
                 points:
@@ -194,6 +196,8 @@ layers:
                     text: global.text
         bar:
             # enabled: false
+            legend: true
+            legend_name: Bar
             filter: global.bar.filter
             draw:
                 points:
@@ -208,6 +212,8 @@ layers:
                     text: global.text
         retail:
             # enabled: false
+            legend: true
+            legend_name: Retail, Shopping
             filter: global.retail.filter
             draw:
                 points:
@@ -222,6 +228,8 @@ layers:
                     text: global.text
         doctor:
             # enabled: false
+            legend: true
+            legend_name: Doctor
             filter: global.doctor.filter
             draw:
                 points:
@@ -236,6 +244,8 @@ layers:
                     text: global.text
         professional:
             # enabled: false
+            legend: true
+            legend_name: Professional
             filter: global.professional.filter
             draw:
                 points:
@@ -250,6 +260,8 @@ layers:
                     text: global.text
         construction:
             # enabled: false
+            legend: true
+            legend_name: Building & Trades
             filter: global.construction.filter
             draw:
                 points:
@@ -264,6 +276,8 @@ layers:
                     text: global.text
         services:
             # enabled: false
+            legend: true
+            legend_name: Services
             filter: global.services.filter
             draw:
                 points:
@@ -278,6 +292,8 @@ layers:
                     text: global.text
         transportation:
             # enabled: false
+            legend: true
+            legend_name: Transportation
             filter: global.transportation.filter
             draw:
                 points:
@@ -292,6 +308,8 @@ layers:
                     text: global.text
         others:
             # enabled: false
+            legend: true
+            legend_name: Other
             filter: global.others.filter
             dots:
                 draw:

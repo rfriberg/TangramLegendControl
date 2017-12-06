@@ -113,6 +113,12 @@
           opacity: 1
         });
 
+    // Add legend
+    L.control.tangramLegendControl({
+      title: "WOF Classifiers",
+      //layers: legendLayers
+    }).addTo(map);
+
     /*******************
      * Set map events
      *******************/
@@ -124,18 +130,12 @@
 
       setupKeyAndGeocoder(scene);
 
-      var center = map.getCenter(),
-          lat = center.lat,
-          lng = center.lng;
+      var center = map.getCenter();
+      lat = center.lat;
+      lng = center.lng;
       console.log('Tangram loaded, center of map at ', lat, lng);
 
       getWOF(lat,lng);
-
-      // Build the legend
-      L.control.tangramLegendControl(legendLayers, {
-        scene: scene,
-        title: "WOF Classifiers"
-      }).addTo(map);
 
       tangramLayer.setSelectionEvents({
           hover: onMapHover,
