@@ -11,6 +11,7 @@
  *
  * ToDo:
  *   - Check for color under layer definition (rather than global)
+ *   - Accept multiple color formats
  *   - Support line and polygon types, as well
  *   
  * *************************/
